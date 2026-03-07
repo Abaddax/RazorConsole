@@ -15,7 +15,6 @@
     <PackageReference Include="Microsoft.Extensions.AI.Ollama" />
     <PackageReference Include="Microsoft.Extensions.AI.OpenAI" />
     <PackageReference Include="Microsoft.Extensions.Hosting" />
-    <PackageReference Include="Spectre.Console" />
   </ItemGroup>
 
 </Project>
