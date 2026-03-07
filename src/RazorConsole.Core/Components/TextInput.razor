@@ -13,30 +13,30 @@
 <div class="text-input"
      @attributes="AdditionalAttributes"
      @key="@_generatedFocusKey"
-    data-text-input="true"
-    data-focusable="@FocusableAttribute"
-    data-focus-key="@_generatedFocusKey"
-    data-focus-order="@FocusOrderAttribute"
-    data-expand="@ExpandAttribute"
-    data-placeholder="@PlaceholderAttribute"
-    data-mask-input="@MaskInputAttribute"
-    data-has-value="@HasValueAttribute"
-    value="@_currentValue"
-    @oninput="HandleInputAsync"
-    @onchange="HandleSubmitAsync"
-    @onfocus="HandleFocusAsync"
-    @onfocusout="HandleBlurAsync">
-    <Panel BorderColor="@CurrentBorderColor" Border="@BorderStyle" Padding="@BorderPadding" Expand="@Expand">
-        @if (!string.IsNullOrWhiteSpace(Label))
-            {
-                <Markup Content="@Label" Foreground="@LabelColor" Decoration="@LabelDecoration" />
-            }
-            <Padder Padding="@ContentPadding">
-                <Markup Content="@DisplayContent"
-                        Foreground="@DisplayForeground"
-                        Decoration="@DisplayDecoration" />
-            </Padder>
-    </Panel>
+     data-text-input="true"
+     data-focusable="@FocusableAttribute"
+     data-focus-key="@_generatedFocusKey"
+     data-focus-order="@FocusOrderAttribute"
+     data-expand="@ExpandAttribute"
+     data-placeholder="@PlaceholderAttribute"
+     data-mask-input="@MaskInputAttribute"
+     data-has-value="@HasValueAttribute"
+     value="@_currentValue"
+     @oninput="HandleInputAsync"
+     @onchange="HandleSubmitAsync"
+     @onfocus="HandleFocusAsync"
+     @onfocusout="HandleBlurAsync">
+     <Panel BorderColor="@CurrentBorderColor" Border="@BorderStyle" Padding="@BorderPadding" Expand="@Expand">
+         @if (!string.IsNullOrWhiteSpace(Label))
+             {
+                 <Markup Content="@Label" Foreground="@LabelColor" Decoration="@LabelDecoration" />
+             }
+             <Padder Padding="@ContentPadding">
+                 <Markup Content="@DisplayContent"
+                         Foreground="@DisplayForeground"
+                         Decoration="@DisplayDecoration" />
+             </Padder>
+     </Panel>
 </div>
 @code {
     /// <summary>
@@ -286,15 +286,15 @@
 
     private Decoration DisplayDecoration => HasValue ? Decoration.None : PlaceholderDecoration;
 
-    protected override void OnParametersSet()
+    protected override async Task OnParametersSetAsync()
     {
         var incoming = Value ?? string.Empty;
         // Only update _currentValue if the Value parameter actually changed from the parent
         // This prevents resetting user input when the parent re-renders with the same value
         if (!string.Equals(incoming, _lastIncomingValue, StringComparison.Ordinal))
         {
-            _currentValue = incoming;
             _lastIncomingValue = incoming;
+            await SetCurrentValueAsync(incoming);
         }
     }
 
@@ -306,12 +306,7 @@
         }
 
         var newValue = ExtractValue(args) ?? string.Empty;
-        _currentValue = newValue;
-
-        if (ValueChanged.HasDelegate)
-        {
-            await ValueChanged.InvokeAsync(newValue).ConfigureAwait(false);
-        }
+        await SetCurrentValueAsync(newValue);
 
         if (OnInput.HasDelegate)
         {
@@ -329,12 +324,17 @@
         }
 
         var submittedValue = ExtractValue(args);
-        _currentValue = submittedValue ?? string.Empty;
+        await SetCurrentValueAsync(submittedValue ?? string.Empty);
 
         if (OnSubmit.HasDelegate)
         {
             await OnSubmit.InvokeAsync(submittedValue).ConfigureAwait(false);
         }
+
+        //Force reevaluation
+        _lastIncomingValue = null!;
+        await OnParametersSetAsync();
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
     }
 
     private async Task HandleFocusAsync(FocusEventArgs args)
@@ -366,6 +366,18 @@
         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
     }
 
+    private async Task SetCurrentValueAsync(string value)
+    {
+        if (!string.Equals(value, _currentValue, StringComparison.Ordinal))
+        {
+            _currentValue = value;
+
+            if (ValueChanged.HasDelegate)
+            {
+                await ValueChanged.InvokeAsync(value).ConfigureAwait(false);
+            }
+        }
+    }
     private static string? ExtractValue(ChangeEventArgs? args)
     {
         if (args?.Value is null)
