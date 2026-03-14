@@ -10,8 +10,10 @@
 @using RazorConsole.Components
 @using Spectre.Console
 
+@inherits RazorConsole.Core.Focus.Focusable
+
 <div class="text-input"
-     @attributes="AdditionalAttributes"
+     @attributes="@AdditionalAttributes"
      @key="@_generatedFocusKey"
      data-text-input="true"
      data-focusable="@FocusableAttribute"
@@ -49,7 +51,6 @@
     /// </para>
     /// </remarks>
 
-    private readonly string _generatedFocusKey = Guid.NewGuid().ToString("N");
     private bool _isFocused;
     private string _currentValue = string.Empty;
     private string _lastIncomingValue = string.Empty;
@@ -217,26 +218,10 @@
     public bool Expand { get; set; }
 
     /// <summary>
-    /// Whether the input is disabled. When disabled, cannot receive focus or accept input.
-    /// </summary>
-    /// <remarks>
-    /// When disabled, the input cannot receive focus or accept input, and uses the <see cref="DisabledBorderColor"/>.
-    /// Default is <c>false</c>.
-    /// </remarks>
-    [Parameter]
-    public bool Disabled { get; set; }
-
-    /// <summary>
     /// Whether input characters should be masked (displayed as bullets). Useful for password fields. Default is <c>false</c>.
     /// </summary>
     [Parameter]
     public bool MaskInput { get; set; }
-
-    /// <summary>
-    /// Tab order for keyboard navigation. Lower values receive focus first. If <c>null</c>, natural document order is used.
-    /// </summary>
-    [Parameter]
-    public int? FocusOrder { get; set; }
 
     /// <summary>
     /// Additional HTML attributes to apply to the input element.
@@ -244,11 +229,6 @@
     [Parameter(CaptureUnmatchedValues = true)]
     public IReadOnlyDictionary<string, object?>? AdditionalAttributes { get; set; }
 
-    private string FocusableAttribute => Disabled ? "false" : "true";
-
-    private string? FocusOrderAttribute => FocusOrder.HasValue
-        ? FocusOrder.Value.ToString(CultureInfo.InvariantCulture)
-        : null;
 
     private string ExpandAttribute => Expand ? "true" : "false";
 

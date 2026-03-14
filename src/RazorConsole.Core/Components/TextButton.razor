@@ -2,12 +2,18 @@
 @using Spectre.Console
 @namespace RazorConsole.Components
 
-<div @onfocus="OnFocus" @onfocusout="OnFocusOut" @onclick="OnClick"
-     data-focusable="true"
+@inherits RazorConsole.Core.Focus.Focusable
+
+<div @key="@_generatedFocusKey"
+     data-focusable="@FocusableAttribute"
+     data-focus-key="@_generatedFocusKey"
      data-focus-order="@FocusOrderAttribute"
-     @key="@_generatedFocusKey"
-     data-focus-key="@_generatedFocusKey">
-    <Markup Content="@Content" Background="@(_isFocused ? FocusedColor : BackgroundColor)"/>
+     @onfocus="OnFocusAsync"
+     @onfocusout="OnFocusOutAsync"
+     @onclick="OnClick">
+    <Markup Content="@Content"
+            Foreground="@(Disabled ? DisabledContentColor : ContentColor)"
+            Background="@(_isFocused ? FocusedColor : BackgroundColor)"/>
 </div>
 
 @code {
@@ -20,19 +26,17 @@
     /// </remarks>
     private bool _isFocused = false;
 
-    private readonly string _generatedFocusKey = Guid.NewGuid().ToString("N");
-
     /// <summary>
     /// Background color when focused. Default is <see cref="Color.DeepSkyBlue1"/>.
     /// </summary>
     [Parameter]
-    public Spectre.Console.Color FocusedColor { get; set; } = Spectre.Console.Color.DeepSkyBlue1;
+    public Color FocusedColor { get; set; } = Color.DeepSkyBlue1;
 
     /// <summary>
-    /// Background color when not focused. Default is <see cref="Spectre.Console.Color.Default"/>.
+    /// Background color when not focused. Default is <see cref="Color.Default"/>.
     /// </summary>
     [Parameter]
-    public Spectre.Console.Color BackgroundColor { get; set; } = Spectre.Console.Color.Default;
+    public Color BackgroundColor { get; set; } = Color.Default;
 
     /// <summary>
     /// Text content displayed on the button.
@@ -41,30 +45,62 @@
     public string Content { get; set; } = string.Empty;
 
     /// <summary>
+    /// Color of the content text. Default is <see cref="Color.White"/>.
+    /// </summary>
+    [Parameter]
+    public Color ContentColor { get; set; } = Color.White;
+
+    /// <summary>
+    /// Color of the content text when disabled. Default is <see cref="Color.Grey19"/>.
+    /// </summary>
+    [Parameter]
+    public Color DisabledContentColor { get; set; } = Color.Grey19;
+
+    /// <summary>
     /// Event callback invoked when the button is clicked.
     /// </summary>
     [Parameter]
     public EventCallback OnClick { get; set; }
 
     /// <summary>
-    /// Tab order for keyboard navigation. Lower values receive focus first. If <c>null</c>, natural document order is used.
+    /// Event callback invoked when input receives focus.
     /// </summary>
     [Parameter]
-    public int? FocusOrder { get; set; }
+    public EventCallback<FocusEventArgs> OnFocus { get; set; }
 
-    private string? FocusOrderAttribute => FocusOrder.HasValue
-        ? FocusOrder.Value.ToString(CultureInfo.InvariantCulture)
-        : null;
+    /// <summary>
+    /// Event callback invoked when input loses focus.
+    /// </summary>
+    [Parameter]
+    public EventCallback<FocusEventArgs> OnFocusOut { get; set; }
 
-    private void OnFocus(FocusEventArgs e)
+
+    private async Task OnFocusAsync(FocusEventArgs args)
     {
+        if (Disabled)
+        {
+            return;
+        }
+
         _isFocused = true;
-        StateHasChanged();
+
+        if (OnFocus.HasDelegate)
+        {
+            await OnFocus.InvokeAsync(args).ConfigureAwait(false);
+        }
+
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
     }
 
-    private void OnFocusOut(FocusEventArgs e)
+    private async Task OnFocusOutAsync(FocusEventArgs args)
     {
         _isFocused = false;
-        StateHasChanged();
+
+        if (OnFocusOut.HasDelegate)
+        {
+            await OnFocusOut.InvokeAsync(args).ConfigureAwait(false);
+        }
+
+        await InvokeAsync(StateHasChanged).ConfigureAwait(false);
     }
 }

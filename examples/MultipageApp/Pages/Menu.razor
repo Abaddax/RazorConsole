@@ -16,16 +16,19 @@
         <Rows>
             <TextButton Content="    New Game    "
                         OnClick="@(() => Nav.NavigateTo("/newgame"))"
+                        Disabled="@_showExitModal"
                         BackgroundColor="@Color.Grey15"
                         FocusedColor="@Color.Green" />
             <Newline />
             <TextButton Content="    Settings    "
                         OnClick="@(() => Nav.NavigateTo("/settings"))"
+                        Disabled="@_showExitModal"
                         BackgroundColor="@Color.Grey15"
                         FocusedColor="@Color.Blue" />
             <Newline />
             <TextButton Content="      Exit      "
                         OnClick="ShowExitModal"
+                        Disabled="@_showExitModal"
                         BackgroundColor="@Color.Grey15"
                         FocusedColor="@Color.Red" />
         </Rows>
