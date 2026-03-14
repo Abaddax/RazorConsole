@@ -2,6 +2,8 @@
 @using RazorConsole.Core.Rendering
 @using Spectre.Console
 
+@inherits RazorConsole.Core.Focus.Focusable
+
 @implements IDisposable
 @inject ScrollableLayoutCoordinator LayoutCoordinator;
 
@@ -13,15 +15,19 @@
 
     @if (Scrollbar != null)
     {
-        <div data-scrollbar="true"
-             @onfocusin="OnFocusIn"
-             @onfocusout="OnFocusOut"
-             @onkeydown="HandleKeyDown"
+        <div @key="@_generatedFocusKey"
+             data-scrollbar="true"
+             data-focusable="@FocusableAttribute"
+             data-focus-key="@_generatedFocusKey"
+             data-focus-order="@FocusOrderAttribute"
              data-track-char="@Scrollbar.TrackChar"
              data-thumb-char="@Scrollbar.ThumbChar"
              data-track-color="@ScrollbarTrackColorAttribute"
              data-thumb-color="@ScrollbarThumbColorAttribute"
-             data-min-thumb-height="@Scrollbar.MinThumbHeight">
+             data-min-thumb-height="@Scrollbar.MinThumbHeight"
+             @onfocusin="OnFocusIn"
+             @onfocusout="OnFocusOut"
+             @onkeydown="HandleKeyDown">
         </div>
     }
 

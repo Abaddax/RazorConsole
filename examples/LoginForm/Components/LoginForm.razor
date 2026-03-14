@@ -24,40 +24,40 @@
 			</Panel>
 			<Newline />
 			<TextButton Content="Logout"
-			OnClick="HandleLogout"
-			BackgroundColor="@Color.Grey"
-			FocusedColor="@Color.Yellow" />
+			            OnClick="HandleLogout"
+			            BackgroundColor="@Color.Grey"
+			            FocusedColor="@Color.Yellow" />
 		}
 		else
 		{
 			<TextInput Label="Username"
-			Value="@_username"
-			ValueChanged="OnUsernameChanged"
-			Placeholder="Enter your username"
-			FocusedBorderColor="@(_usernameError ? Color.Red : Color.DeepSkyBlue1)"
-			BorderColor="@(_usernameError ? Color.Red3 : Color.Grey37)"
-			BorderPadding="@_inputPadding"
-			Expand="true" />
+			           Value="@_username"
+			           ValueChanged="OnUsernameChanged"
+			           Placeholder="Enter your username"
+			           FocusedBorderColor="@(_usernameError ? Color.Red : Color.DeepSkyBlue1)"
+			           BorderColor="@(_usernameError ? Color.Red3 : Color.Grey37)"
+			           BorderPadding="@_inputPadding"
+			           Expand="true" />
 
 			<TextInput Label="Password"
-			Value="@_password"
-			ValueChanged="OnPasswordChanged"
-			Placeholder="Enter your password"
-			MaskInput="true"
-			FocusedBorderColor="@(_passwordError ? Color.Red : Color.MediumOrchid)"
-			BorderColor="@(_passwordError ? Color.Red3 : Color.Grey37)"
-			BorderPadding="@_inputPadding"
-			Expand="true" />
+			           Value="@_password"
+			           ValueChanged="OnPasswordChanged"
+			           Placeholder="Enter your password"
+			           MaskInput="true"
+			           FocusedBorderColor="@(_passwordError ? Color.Red : Color.MediumOrchid)"
+			           BorderColor="@(_passwordError ? Color.Red3 : Color.Grey37)"
+			           BorderPadding="@_inputPadding"
+			           Expand="true" />
 
 			<Columns>
 				<TextButton Content="Login"
-				OnClick="HandleLogin"
-				BackgroundColor="@Color.Green"
-				FocusedColor="@Color.Lime" />
+				            OnClick="HandleLogin"
+				            BackgroundColor="@Color.Green"
+				            FocusedColor="@Color.Lime" />
 				<TextButton Content="Clear"
-				OnClick="HandleClear"
-				BackgroundColor="@Color.Grey"
-				FocusedColor="@Color.Yellow" />
+				            OnClick="HandleClear"
+				            BackgroundColor="@Color.Grey"
+				            FocusedColor="@Color.Yellow" />
 			</Columns>
 		}
 	</Rows>
@@ -82,18 +82,38 @@
 
     private Task OnUsernameChanged(string? value)
     {
-        _username = value ?? string.Empty;
-        _usernameError = false;
-        _errorMessage = string.Empty;
+        if (value?.Length >= MinUsernameLength)
+        {
+            _username = value ?? string.Empty;
+            _usernameError = false;
+            _errorMessage = string.Empty;
+        }
+        else
+        {
+            _usernameError = true;
+            _errorMessage = string.IsNullOrWhiteSpace(value)
+                ? "Username cannot be empty"
+                : $"Username must be at least {MinUsernameLength} characters";
+        }
         StateHasChanged();
         return Task.CompletedTask;
     }
 
     private Task OnPasswordChanged(string? value)
     {
-        _password = value ?? string.Empty;
-        _passwordError = false;
-        _errorMessage = string.Empty;
+        if (value?.Length >= MinPasswordLength)
+        {
+            _password = value ?? string.Empty;
+            _passwordError = false;
+            _errorMessage = string.Empty;
+        }
+        else
+        {
+            _passwordError = true;
+            _errorMessage = string.IsNullOrWhiteSpace(value)
+                ? "Password cannot be empty"
+                : $"Password must be at least {MinPasswordLength} characters";
+        }
         StateHasChanged();
         return Task.CompletedTask;
     }
