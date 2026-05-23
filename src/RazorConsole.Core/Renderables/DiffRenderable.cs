@@ -71,7 +71,7 @@ internal class DiffRenderable
             // Move cursor to the first different line in the viewport
             int linesToMoveUp = _shape.Height - renderFromLine;
 
-            bool needFullClear = NeedsFullClear(linesToMoveUp) || widthChanged;
+            bool needFullClear = NeedsFullClear(linesToMoveUp, totalLines) || widthChanged;
 
             if (needFullClear)
             {
@@ -115,7 +115,7 @@ internal class DiffRenderable
                     }
                 }
 
-                yield return Segment.Control(NEL());
+                yield return Segment.Control(MoveToNextLine());
             }
 
             // Cleaning residual lines from below
@@ -125,7 +125,7 @@ internal class DiffRenderable
                 for (var i = 0; i < remaining; i++)
                 {
                     yield return Segment.Control(EL(2)); // Clean line
-                    yield return Segment.Control(NEL()); // Go to next line
+                    yield return Segment.Control(MoveToNextLine()); // Go to next line
                 }
 
                 yield return Segment.Control(CUU(remaining));
@@ -146,12 +146,29 @@ internal class DiffRenderable
         }
     }
 
-    private bool NeedsFullClear(int linesToMoveUp)
+    private bool NeedsFullClear(int linesToMoveUp, int totalLines)
     {
         // Console.CursorTop is not supported in WebAssembly, always full clear
         if (OperatingSystem.IsBrowser())
         {
             return true;
+        }
+
+        // NEL is not supported pre win11, also moving the cursor outside the viewport causes rendering bugs
+        if (OperatingSystem.IsWindows() &&
+            !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
+        {
+            var windowHeight = Console.WindowHeight;
+            var windowTop = Console.WindowTop;
+            //If rendered content is outside viewport -> need full clear
+            var onlyMovesInViewport = linesToMoveUp < windowHeight;
+            //If rendered normally and no user scroll -> console it a the bottom
+            //If then only parts of the currently visable viewports change -> not full clear needed
+            var isConsoleAtBottom = windowTop + windowHeight - 1 == totalLines;
+            //If the console is however longer then the total lines 'isConsoleAtBottom' can never be 'true'
+            //-> Additional check
+            var contentFullyFitsAndNotScrolled = windowHeight - 1 >= totalLines && windowTop == 0;
+            return !onlyMovesInViewport || (!isConsoleAtBottom && !contentFullyFitsAndNotScrolled);
         }
 
         return linesToMoveUp > Console.CursorTop;
@@ -241,4 +258,19 @@ internal class DiffRenderable
 
     private static readonly List<SegmentLine> EmptyLines = new(0);
     private static readonly SegmentLine EmptyLine = new();
+
+    private static string MoveToNextLine()
+    {
+        //Only Windows and before Win11
+        if (OperatingSystem.IsWindows() &&
+            !OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
+        {
+            //Hard "scroll" without NEL
+            return "\r\n";
+            //TODO:
+            //Check if maybe 'CSI + "1E"' yields a performance benefit,
+            //when 'needFullClear==false' (Move cursor only inside viewport)
+        }
+        return NEL();
+    }
 }
